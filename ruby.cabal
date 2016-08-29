@@ -1,0 +1,38 @@
+name:                ruby
+version:             0.1.0.0
+synopsis:            Simple project template from stack
+description:         Please see README.md
+homepage:            https://github.com/xldenis/ruby#readme
+license:             BSD3
+license-file:        LICENSE
+author:              Xavier Denis
+maintainer:          xldenis@gmail.com
+copyright:           2016 Xavier Denis
+category:            Web
+build-type:          Simple
+cabal-version:       >=1.10
+
+library
+  hs-source-dirs:      src
+  default-language:    Haskell2010
+  exposed-modules:     Ruby.AST
+                     , Ruby.Parser
+  other-modules:       Ruby.Parser.Lexer
+  build-depends:       base >= 4.7 && < 5
+                     , megaparsec >= 5
+
+test-suite ruby-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  default-language:    Haskell2010
+  build-depends:       base
+                     , hspec
+                     , hspec-discover
+                     , ruby
+                     , hspec-megaparsec
+                     , text
+                     , filepath
+                     , directory
+                     , megaparsec
+  ghc-options:        -threaded -rtsopts -with-rtsopts=-N
