@@ -7,11 +7,19 @@ module Ruby.Parser.Lexer where
   import Control.Applicative ((<*), empty)
 
   reserved :: [String]
-  reserved = ["if", "then", "else", "end", "def"]
+  reserved = ["if", "then", "else", "end", "def", "defined"]
 
   identifier :: Parser String
   identifier = p >>= res
     where p = label "identifier" . lexeme $ ((:) <$> letterChar <*> many alphaNumChar)
+          res i = if i `elem` reserved then
+              fail $ "The reserved word `" ++ i ++ "` cannot be used as an identifier."
+            else
+              return i
+
+  revSym :: Parser String
+  revSym = p >>= res
+    where p = label "symbol" . lexeme $ ((:) <$> letterChar <*> many alphaNumChar <* char ':')
           res i = if i `elem` reserved then
               fail $ "The reserved word `" ++ i ++ "` cannot be used as an identifier."
             else
@@ -41,8 +49,7 @@ module Ruby.Parser.Lexer where
   sc = L.space (void $ oneOf " \t") lineComment empty
 
   sep :: Parser ()
-  sep = scn
-  -- sep = skipSome (symbol ";" *> return () <|> scn)
+  sep = L.space (void spaceChar <|> void (symbol ";")) lineComment empty
 
   lineComment :: Parser ()
   lineComment = char '#' *> skipMany (noneOf "\n")
@@ -58,3 +65,9 @@ module Ruby.Parser.Lexer where
 
   dquotes :: Parser a -> Parser a
   dquotes = between (char '"') (char '"')
+
+  pipes :: Parser a -> Parser a
+  pipes = between (symbol "|") (symbol "|")
+
+  braces :: Parser a -> Parser a
+  braces = between (symbol "{") (symbol "}")

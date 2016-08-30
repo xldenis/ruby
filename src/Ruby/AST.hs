@@ -25,6 +25,10 @@ module Ruby.AST where
 
   data BinaryOp
     = Minus
+    | OrWord
+    | AndWord
+    | Or
+    | And
     deriving (Show)
 
   data ConstantName
@@ -39,9 +43,10 @@ module Ruby.AST where
     | Seq { expressions :: [Expression] }
     | Alias { target :: Name, source :: Name }
     | Method { method :: Name, args :: [Arg], expression :: Expression }
-    | Undefine { method :: Name }
+    | Undefine { methods :: [Name] }
     | Defined { expression :: Expression }
     | Block { lhs :: [Name], expression :: Expression }
+    | InlineBlock { lhs :: [Name], expression :: Expression }
     | Redo
     | Retry
     | Break
@@ -50,7 +55,7 @@ module Ruby.AST where
     | Yield
     | Raise
     | Splat { expression :: Expression }
-    | For { names :: [Name], expression :: Expression }
+    | For { lhs :: [Name], expression :: Expression }
     | Until { condition :: Expression, expression :: Expression }
     | While { condition :: Expression, expression :: Expression }
     | IfMod { expression :: Expression, condition :: Expression }
@@ -58,8 +63,6 @@ module Ruby.AST where
     | If { condition :: Expression, branch :: CondBranch }
     | Unless { condition :: Expression, branch :: CondBranch }
     | Case { condition :: Expression, clause :: CaseBranch }
-    | And { left :: Expression, right :: Expression }
-    | Or { left :: Expression, right :: Expression }
     | Not { right :: Expression }
     | Dot { object :: Expression, method :: Name }
     | Self
