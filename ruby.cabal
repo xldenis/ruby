@@ -17,6 +17,7 @@ library
   default-language:    Haskell2010
   exposed-modules:     Ruby.AST
                      , Ruby.Parser
+                     , Ruby.Parser.Literal
   other-modules:       Ruby.Parser.Lexer
   build-depends:       base >= 4.7 && < 5
                      , megaparsec >= 5

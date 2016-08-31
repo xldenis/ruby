@@ -11,3 +11,4 @@ module Ruby.ParserSpec where
   spec :: Spec
   spec = do
     filesShouldParse "test/parser/success/expression" parseExpressions
+    filesShouldParse "test/parser/success/literal" (some $ parseLiteral <* newline)

@@ -36,6 +36,13 @@ module Ruby.AST where
    | Name Name
    deriving (Show)
 
+  data IntType
+    = Binary
+    | Octal
+    | Decimal
+    | Hexadecimal
+    deriving (Show)
+
   data Expression
     = Begin { body :: Expression, rescue :: Maybe Expression, ensure :: Maybe Expression, elseBlock :: Maybe Expression }
     | Module { name :: ConstantName, expression :: Expression }
@@ -69,4 +76,5 @@ module Ruby.AST where
     | Invoke
     | BinaryOp { op :: BinaryOp, left :: Expression, right :: Expression }
     | Assign
+    | Integer { kind :: IntType, value :: Integer }
     deriving (Show)
