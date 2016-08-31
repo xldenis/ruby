@@ -3,6 +3,8 @@ module Ruby.Parser.Lexer where
   import Text.Megaparsec.Text
   import Text.Megaparsec
 
+  import Data.Maybe (maybeToList)
+
   import Control.Monad (void)
   import Control.Applicative ((<*), empty)
 
@@ -17,6 +19,11 @@ module Ruby.Parser.Lexer where
             else
               return i
 
+  methodIdentifier :: Parser String
+  methodIdentifier = label "method identifier" . lexeme $ (++) <$> ((:) <$> startLetter <*> many midLetter) <*> endLetter
+    where startLetter = oneOf "@$_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+          midLetter   = oneOf "_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+          endLetter   = maybeToList <$> (optional $ oneOf "!_=?") :: Parser String
   revSym :: Parser String
   revSym = p >>= res
     where p = label "symbol" . lexeme $ ((:) <$> letterChar <*> many alphaNumChar <* char ':')

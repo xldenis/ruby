@@ -1,12 +1,12 @@
 module Ruby.Parser where
-  import Ruby.Parser.Lexer
-
-  import Ruby.AST
-
   import Text.Megaparsec
   import Text.Megaparsec.Text
 
   import Control.Monad (void)
+
+  import Ruby.AST
+  import Ruby.Parser.Lexer
+  import Ruby.Parser.Literal
 
   self :: Parser Expression
   self = symbol "self" *> return Self
@@ -20,7 +20,7 @@ module Ruby.Parser where
 
   defineMethod :: Parser Expression
   defineMethod = endBlock (symbol "def") $ do
-    name <- identifier
+    name <- methodIdentifier
     args <- parens arguments <|> arguments
     sep
     body <- parseExpressions
@@ -77,6 +77,12 @@ module Ruby.Parser where
   blockArgs :: Parser [Name]
   blockArgs = pipes $ list identifier
 
+  require :: Parser Expression
+  require = do
+    symbol "require"
+    path <- parseExpression
+    return $ Require path
+
   parseModule :: Parser Expression
   parseModule = endBlock (symbol "module") $ do
     name <- constantName <* sep
@@ -96,7 +102,17 @@ module Ruby.Parser where
     Seq <$> parseExpression `endBy` sep
 
   parseExpression :: Parser Expression
-  parseExpression = defined <|> defineMethod <|> parseModule <|> parseClass <|> self <|> undefine <|> inlineBlock <|> block <|> alias
+  parseExpression = defined
+                 <|> defineMethod
+                 <|> parseModule
+                 <|> parseClass
+                 <|> self
+                 <|> undefine
+                 <|> inlineBlock
+                 <|> block
+                 <|> alias
+                 <|> require
+                 <|> parseLiteral
 
   constantName :: Parser ConstantName
   constantName = f <$> (lexeme $ capitalized `sepBy` (symbol "::"))

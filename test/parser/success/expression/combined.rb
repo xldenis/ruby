@@ -1,3 +1,5 @@
+require 'some_path'
+
 module Something
   class Lol ; end
   class New < Lol
@@ -5,5 +7,10 @@ module Something
     end
 
     alias test initialize
+
+    def something_check(action: :log) ; end
+
+    def method_name(test: def a ; end)
+    end
   end
 end

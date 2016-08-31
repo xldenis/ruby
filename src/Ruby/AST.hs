@@ -1,5 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields, OverloadedLabels #-}
 module Ruby.AST where
+  import Data.Text
 
   type Name = String
 
@@ -9,19 +10,19 @@ module Ruby.AST where
     = ElseIf { condition :: Expression, expression :: Expression, branch :: CondBranch  }
     | Else { expression :: Expression }
     | Nil
-    deriving (Show)
+    deriving (Show, Eq)
 
   data CaseBranch
     = When { condition :: Expression, expression :: Expression }
     | DefaultCase { expression :: Expression }
-    deriving (Show)
+    deriving (Show, Eq)
 
   data Arg
     = Basic { name :: Name, defaultVal :: Maybe Expression }
     | Keyword { name :: Name, defaultVal :: Maybe Expression }
     | ArraySplat { name :: Name }
     | HashSplat { name :: Name }
-    deriving (Show)
+    deriving (Show, Eq)
 
   data BinaryOp
     = Minus
@@ -29,19 +30,19 @@ module Ruby.AST where
     | AndWord
     | Or
     | And
-    deriving (Show)
+    deriving (Show, Eq)
 
   data ConstantName
    = Namespace Name ConstantName
    | Name Name
-   deriving (Show)
+   deriving (Show, Eq)
 
   data IntType
     = Binary
     | Octal
     | Decimal
     | Hexadecimal
-    deriving (Show)
+    deriving (Show, Eq)
 
   data Expression
     = Begin { body :: Expression, rescue :: Maybe Expression, ensure :: Maybe Expression, elseBlock :: Maybe Expression }
@@ -77,4 +78,7 @@ module Ruby.AST where
     | BinaryOp { op :: BinaryOp, left :: Expression, right :: Expression }
     | Assign
     | Integer { kind :: IntType, value :: Integer }
-    deriving (Show)
+    | RawString { strVal :: Text }
+    | Symbol    { strVal :: Text }
+    | Require { expression :: Expression }
+    deriving (Show, Eq)
