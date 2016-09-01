@@ -61,7 +61,7 @@ module Ruby.AST where
     | Redo
     | Retry
     | Break
-    | Return
+    | Return { expressions :: [Expression] }
     | Next
     | Yield
     | Raise { expression :: Expression }

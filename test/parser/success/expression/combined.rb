@@ -13,5 +13,9 @@ module Something
     def method_name(test: def a ; end)
       raise 'bullshit'
     end
+
+    def returning_method
+      return 3, 5
+    end
   end
 end

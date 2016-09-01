@@ -17,10 +17,10 @@ module Ruby.ParserSpec where
 
   unitSpec :: Spec
   unitSpec = do
-    describe "assignment" $ do
-      it "parses single assignment" $ do
+    describe "assignment parses" $ do
+      it "single assignment" $ do
         parse (assignment <* eof) "" "a = 1" `shouldBe` (Right $ Assign ["a"] [Integer Decimal 1])
-      it "parses double left assignment" $ do
+      it "double left assignment" $ do
         parse (assignment <* eof) "" "a, b = 1" `shouldBe` (Right $ Assign ["a", "b"] [Integer Decimal 1])
-      it "parses double left assignment" $ do
+      it "double left assignment" $ do
         parse (assignment <* eof) "" "a = 1, 1" `shouldBe` (Right $ Assign ["a"] [Integer Decimal 1, Integer Decimal 1])
