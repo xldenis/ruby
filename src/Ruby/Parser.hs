@@ -14,6 +14,12 @@ module Ruby.Parser where
   raise :: Parser Expression
   raise = Raise <$> (symbol "raise" *> parseExpression)
 
+  retry :: Parser Expression
+  retry = (symbol "retry") *> return Retry
+
+  redo :: Parser Expression
+  redo = (symbol "redo")  *> return Redo
+
   parseReturn :: Parser Expression
   parseReturn = Return <$> (symbol "return" *> list parseExpression)
 
@@ -167,6 +173,7 @@ module Ruby.Parser where
                  <|> alias
                  <|> require
                  <|> assignment
+                 <|> retry
                  <|> parseLiteral
 
   constantName :: Parser ConstantName
