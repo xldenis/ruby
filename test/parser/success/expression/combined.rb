@@ -11,6 +11,7 @@ module Something
     def something_check(action: :log) ; end
 
     def method_name(test: def a ; end)
+      raise 'bullshit'
     end
   end
 end

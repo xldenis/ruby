@@ -9,7 +9,7 @@ module Ruby.Parser.Lexer where
   import Control.Applicative ((<*), empty)
 
   reserved :: [String]
-  reserved = ["if", "then", "else", "end", "def", "defined", "begin", "ensure", "rescue"]
+  reserved = ["if", "then", "else", "end", "def", "defined", "begin", "ensure", "rescue", "raise"]
 
   identifier :: Parser String
   identifier = p >>= res

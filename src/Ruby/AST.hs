@@ -64,7 +64,7 @@ module Ruby.AST where
     | Return
     | Next
     | Yield
-    | Raise
+    | Raise { expression :: Expression }
     | Splat { expression :: Expression }
     | For { lhs :: [Name], expression :: Expression }
     | Until { condition :: Expression, expression :: Expression }
