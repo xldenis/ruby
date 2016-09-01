@@ -17,6 +17,15 @@ module Ruby.Parser where
   parseReturn :: Parser Expression
   parseReturn = Return <$> (symbol "return" *> list parseExpression)
 
+  yield :: Parser Expression
+  yield = Yield <$> (symbol "yield" *> list parseExpression)
+
+  parseBreak :: Parser Expression
+  parseBreak = Break <$> (symbol "break" *> list parseExpression)
+
+  next :: Parser Expression
+  next = Next <$> (symbol "next" *> list parseExpression)
+
   alias :: Parser Expression
   alias = do
     symbol "alias"
@@ -149,6 +158,9 @@ module Ruby.Parser where
                  <|> self
                  <|> raise
                  <|> parseReturn
+                 <|> yield
+                 <|> next
+                 <|> parseBreak
                  <|> undefine
                  <|> inlineBlock
                  <|> block

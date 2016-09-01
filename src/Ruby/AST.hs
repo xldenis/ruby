@@ -60,10 +60,10 @@ module Ruby.AST where
     | InlineBlock { lhs :: [Name], expression :: Expression }
     | Redo
     | Retry
-    | Break
+    | Break  { expressions :: [Expression] }
     | Return { expressions :: [Expression] }
-    | Next
-    | Yield
+    | Next   { expressions :: [Expression] }
+    | Yield  { expressions :: [Expression] }
     | Raise { expression :: Expression }
     | Splat { expression :: Expression }
     | For { lhs :: [Name], expression :: Expression }
