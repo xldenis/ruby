@@ -9,7 +9,7 @@ module Ruby.Parser.Lexer where
   import Control.Applicative ((<*), empty)
 
   reserved :: [String]
-  reserved = ["if", "then", "else", "end", "def", "defined"]
+  reserved = ["if", "then", "else", "end", "def", "defined", "begin", "ensure", "rescue"]
 
   identifier :: Parser String
   identifier = p >>= res
@@ -24,6 +24,7 @@ module Ruby.Parser.Lexer where
     where startLetter = oneOf "@$_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
           midLetter   = oneOf "_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
           endLetter   = maybeToList <$> (optional $ oneOf "!_=?") :: Parser String
+
   revSym :: Parser String
   revSym = p >>= res
     where p = label "symbol" . lexeme $ ((:) <$> letterChar <*> many alphaNumChar <* char ':')

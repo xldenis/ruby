@@ -4,8 +4,6 @@ module Ruby.AST where
 
   type Name = String
 
-  data Rescue = Rescue { exception :: Name, body :: Expression }
-
   data CondBranch
     = ElseIf { condition :: Expression, expression :: Expression, branch :: CondBranch  }
     | Else { expression :: Expression }
@@ -44,8 +42,13 @@ module Ruby.AST where
     | Hexadecimal
     deriving (Show, Eq)
 
+  data Rescue
+    = ExceptionClasses { classes :: [Expression], expression :: Expression }
+    | ExceptionBinding { classes :: [Expression], variable :: Name, expression :: Expression}
+    deriving (Show, Eq)
+
   data Expression
-    = Begin { body :: Expression, rescue :: Maybe Expression, ensure :: Maybe Expression, elseBlock :: Maybe Expression }
+    = Begin { body :: Expression, rescue :: Maybe Rescue, ensure :: Maybe Expression, elseBlock :: Maybe Expression }
     | Module { name :: ConstantName, expression :: Expression }
     | Class { name :: ConstantName, superClass :: Maybe ConstantName, expression :: Expression }
     | Seq { expressions :: [Expression] }

@@ -92,6 +92,30 @@ module Ruby.Parser where
     return $ Assign lhs rhs
     where variables = identifier
 
+  begin :: Parser Expression
+  begin = endBlock (symbol "begin") $ do
+    sep
+    body <- parseExpressions
+    optional parseRescue
+    sep
+    elseBlock <- optional $ (symbol "else" >> sep) *> parseExpressions
+    sep
+    ensure <- optional $ (symbol "ensure" >> sep) *> do
+      parseExpressions
+    return $ Begin body Nothing ensure elseBlock
+
+  parseRescue :: Parser Rescue
+  parseRescue = do
+    symbol "rescue"
+    classes <- (list parseExpression) <* sc
+    variable <- optional $ symbol "=>" *> identifier
+    sep
+    body <- parseExpressions
+
+    return $ case variable of
+      Nothing      -> ExceptionClasses classes body
+      Just varName -> ExceptionBinding classes varName body
+
   parseModule :: Parser Expression
   parseModule = endBlock (symbol "module") $ do
     name <- constantName <* sep
@@ -115,6 +139,7 @@ module Ruby.Parser where
                  <|> defineMethod
                  <|> parseModule
                  <|> parseClass
+                 <|> begin
                  <|> self
                  <|> undefine
                  <|> inlineBlock
