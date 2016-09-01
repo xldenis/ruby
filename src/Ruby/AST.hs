@@ -76,7 +76,7 @@ module Ruby.AST where
     | Self
     | Invoke
     | BinaryOp { op :: BinaryOp, left :: Expression, right :: Expression }
-    | Assign
+    | Assign { lhs :: [Name], rhs :: [Expression]}
     | Integer { kind :: IntType, value :: Integer }
     | RawString { strVal :: Text }
     | Symbol    { strVal :: Text }

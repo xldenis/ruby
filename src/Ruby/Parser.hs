@@ -83,6 +83,15 @@ module Ruby.Parser where
     path <- parseExpression
     return $ Require path
 
+  assignment :: Parser Expression
+  assignment = try $ do
+    lhs <- list variables
+    symbol "="
+    rhs <- list parseExpression
+
+    return $ Assign lhs rhs
+    where variables = identifier
+
   parseModule :: Parser Expression
   parseModule = endBlock (symbol "module") $ do
     name <- constantName <* sep
@@ -112,6 +121,7 @@ module Ruby.Parser where
                  <|> block
                  <|> alias
                  <|> require
+                 <|> assignment
                  <|> parseLiteral
 
   constantName :: Parser ConstantName
