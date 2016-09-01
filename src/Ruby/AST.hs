@@ -48,7 +48,7 @@ module Ruby.AST where
     deriving (Show, Eq)
 
   data Expression
-    = Begin { body :: Expression, rescue :: Maybe Rescue, ensure :: Maybe Expression, elseBlock :: Maybe Expression }
+    = Begin { body :: Expression, rescue :: [Rescue], ensure :: Maybe Expression, elseBlock :: Maybe Expression }
     | Module { name :: ConstantName, expression :: Expression }
     | Class { name :: ConstantName, superClass :: Maybe ConstantName, expression :: Expression }
     | Seq { expressions :: [Expression] }

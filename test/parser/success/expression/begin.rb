@@ -11,6 +11,11 @@ ensure
 end
 
 begin
+rescue
+rescue
+end
+
+begin
 else
 ensure
 end

@@ -96,13 +96,13 @@ module Ruby.Parser where
   begin = endBlock (symbol "begin") $ do
     sep
     body <- parseExpressions
-    optional parseRescue
+    rescues <- many parseRescue
     sep
     elseBlock <- optional $ (symbol "else" >> sep) *> parseExpressions
     sep
     ensure <- optional $ (symbol "ensure" >> sep) *> do
       parseExpressions
-    return $ Begin body Nothing ensure elseBlock
+    return $ Begin body rescues ensure elseBlock
 
   parseRescue :: Parser Rescue
   parseRescue = do
