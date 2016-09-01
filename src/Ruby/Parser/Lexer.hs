@@ -26,7 +26,7 @@ module Ruby.Parser.Lexer where
   methodIdentifier = label "method identifier" . lexeme $ (++) <$> ((:) <$> startLetter <*> many midLetter) <*> endLetter
     where startLetter = oneOf "@$_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
           midLetter   = oneOf "_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-          endLetter   = maybeToList <$> (optional $ oneOf "!_=?") :: Parser String
+          endLetter   = maybeToList <$> optional (oneOf "!_=?") :: Parser String
 
   revSym :: Parser String
   revSym = p >>= res

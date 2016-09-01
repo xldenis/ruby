@@ -15,10 +15,10 @@ module Ruby.Parser where
   raise = Raise <$> (symbol "raise" *> parseExpression)
 
   retry :: Parser Expression
-  retry = (symbol "retry") *> return Retry
+  retry = symbol "retry" *> return Retry
 
   redo :: Parser Expression
-  redo = (symbol "redo")  *> return Redo
+  redo = symbol "redo"  *> return Redo
 
   parseReturn :: Parser Expression
   parseReturn = Return <$> (symbol "return" *> list parseExpression)
@@ -48,7 +48,7 @@ module Ruby.Parser where
     return $ Method name args body
 
   arguments :: Parser [Arg]
-  arguments = list $ argument
+  arguments = list argument
 
   argument :: Parser Arg
   argument = keywordArg <|> basicArg
@@ -62,8 +62,8 @@ module Ruby.Parser where
 
   keywordArg :: Parser Arg
   keywordArg = do
-    name <- try $ revSym
-    defVal <- optional $ parseExpression
+    name <- try revSym
+    defVal <- optional parseExpression
 
     return $ Keyword name defVal
 
@@ -121,14 +121,14 @@ module Ruby.Parser where
     sep
     elseBlock <- optional $ (symbol "else" >> sep) *> parseExpressions
     sep
-    ensure <- optional $ (symbol "ensure" >> sep) *> do
+    ensure <- optional $ (symbol "ensure" >> sep) *>
       parseExpressions
     return $ Begin body rescues ensure elseBlock
 
   parseRescue :: Parser Rescue
   parseRescue = do
     symbol "rescue"
-    classes <- (list parseExpression) <* sc
+    classes <- list parseExpression <* sc
     variable <- optional $ symbol "=>" *> identifier
     sep
     body <- parseExpressions
@@ -141,7 +141,7 @@ module Ruby.Parser where
   parseModule = endBlock (symbol "module") $ do
     name <- constantName <* sep
     body <- parseExpressions
-    return $ Module name (body)
+    return $ Module name body
 
   parseClass :: Parser Expression
   parseClass = endBlock (symbol "class") $ do
@@ -152,7 +152,7 @@ module Ruby.Parser where
     return $ Class name super body
 
   parseExpressions :: Parser Expression
-  parseExpressions = do
+  parseExpressions =
     Seq <$> parseExpression `endBy` sep
 
   parseExpression :: Parser Expression
@@ -177,6 +177,6 @@ module Ruby.Parser where
                  <|> parseLiteral
 
   constantName :: Parser ConstantName
-  constantName = f <$> (lexeme $ capitalized `sepBy` (symbol "::"))
-    where f (n:[]) = Name n
+  constantName = f <$> lexeme (capitalized `sepBy` symbol "::")
+    where f [n] = Name n
           f (n:ns) = Namespace n (f ns)
