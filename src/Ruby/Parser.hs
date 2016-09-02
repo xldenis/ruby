@@ -87,6 +87,20 @@ module Ruby.Parser where
 
     return $ Defined expr
 
+  parseIf :: Parser Expression
+  parseIf = endBlock (symbol "if") $ do
+    left <- Guard <$> (parseExpression <* sep) <*> parseExpressions
+    branches <- many $ do
+      symbol "elsif"
+      cond <- parseExpression
+      sep
+      right <- parseExpressions
+      return $ Guard cond right
+
+    cap <- option Nil $ Else <$> (symbol "else" *> sep *> parseExpressions)
+
+    return . If $ left (foldr (\a b -> a b) cap branches)
+
   block :: Parser Expression
   block = endBlock (symbol "do") $ do
     lhs <- concat <$> optional blockArgs
@@ -207,4 +221,5 @@ module Ruby.Parser where
            <|> require
            <|> assignment
            <|> retry
+           <|> parseIf
            <|> parseLiteral

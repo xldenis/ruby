@@ -5,7 +5,7 @@ module Ruby.AST where
   type Name = String
 
   data CondBranch
-    = ElseIf { condition :: Expression, expression :: Expression, branch :: CondBranch  }
+    = Guard { condition :: Expression, expression :: Expression, branch :: CondBranch  }
     | Else { expression :: Expression }
     | Nil
     deriving (Show, Eq)
@@ -107,8 +107,8 @@ module Ruby.AST where
     | While { condition :: Expression, expression :: Expression }
     | IfMod { expression :: Expression, condition :: Expression }
     | UnlessMod { expression :: Expression, condition :: Expression }
-    | If { condition :: Expression, branch :: CondBranch }
-    | Unless { condition :: Expression, branch :: CondBranch }
+    | If { branch :: CondBranch }
+    | Unless { branch :: CondBranch }
     | Case { condition :: Expression, clause :: CaseBranch }
     | Not { right :: Expression }
     | Dot { object :: Expression, method :: Name }
