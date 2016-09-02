@@ -24,3 +24,6 @@ module Ruby.ParserSpec where
         parse (assignment <* eof) "" "a, b = 1" `shouldBe` (Right $ Assign ["a", "b"] [Integer Decimal 1])
       it "double left assignment" $ do
         parse (assignment <* eof) "" "a = 1, 1" `shouldBe` (Right $ Assign ["a"] [Integer Decimal 1, Integer Decimal 1])
+    describe "invoke parses" $ do
+      it "single arguments" $ do
+        parse (invoke (Integer Decimal 1) <* eof) "" "2" `shouldBe` (Right $ Integer Decimal 1 `Invoke` [Integer Decimal 2])

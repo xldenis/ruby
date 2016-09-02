@@ -140,8 +140,20 @@ module Ruby.Parser where
 
   invoke :: Expression -> Parser Expression
   invoke object = try $ do
-    args <- list parseExpression
+    args <- list1 parseExpression
     return $ Invoke object args
+
+  ifGuard :: Expression -> Parser Expression
+  ifGuard object = do
+    symbol "if"
+    condition <- parseExpression
+    return $ IfMod object condition
+
+  unlessGuard :: Expression -> Parser Expression
+  unlessGuard object = do
+    symbol "unless"
+    condition <- parseExpression
+    return $ UnlessMod object condition
 
   assignment :: Parser Expression
   assignment = try $ do
@@ -204,7 +216,7 @@ module Ruby.Parser where
 
   parseExpression' :: Expression -> Parser Expression
   parseExpression' op = do
-    ex <- optional (selector op)
+    ex <- optional (selector op <|> ifGuard op <|> unlessGuard op <|> invoke op)
     case ex of
       Nothing -> return op
       Just x -> parseExpression' x

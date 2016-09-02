@@ -27,5 +27,10 @@ module Something
       1 ~ 1
       1 * 2 / 3 % 6 + 4 << 20
     end
+
+    def something
+      1 if 5
+      5 unless 0
+    end
   end
 end

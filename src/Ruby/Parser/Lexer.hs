@@ -72,6 +72,9 @@ module Ruby.Parser.Lexer where
   list :: Parser a -> Parser [a]
   list a = a `sepBy` symbol ","
 
+  list1 :: Parser a -> Parser [a]
+  list1 a = a `sepBy1` symbol ","
+
   parens :: Parser a -> Parser a
   parens = between (symbol "(") (symbol ")")
 
