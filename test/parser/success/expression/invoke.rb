@@ -1,4 +1,4 @@
-(def a ; end).to_s
+# (def a ; end).to_s
 
 self.to_s.inspect
 

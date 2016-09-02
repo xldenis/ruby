@@ -19,6 +19,7 @@ library
                      , Ruby.Parser
                      , Ruby.Parser.Literal
   other-modules:       Ruby.Parser.Lexer
+                     , Ruby.Parser.Operator
   build-depends:       base >= 4.7 && < 5
                      , megaparsec >= 5
                      , text

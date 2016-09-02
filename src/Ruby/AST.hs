@@ -23,11 +23,40 @@ module Ruby.AST where
     deriving (Show, Eq)
 
   data BinaryOp
-    = Minus
+    -- arithmetic operators
+    = Plus
+    | Minus
+    | Multiplication
+    | Division
+    | Modulus
+    | Exponent
+    -- comparison operators
+    | Equal
+    | NotEqual
+    | GreaterThan
+    | LessThan
+    | GreaterEqual
+    | LessEqual
+    | Compare
+    | ThreeEqual
+    -- pattern match
+    | Match
+    | NotMatch
+    -- bitwise operators
+    | BitAnd
+    | BitOr
+    | BitXor
+    | BitFlip
+    | LeftShift
+    | RightShift
+    -- logical operators
     | OrWord
     | AndWord
     | Or
     | And
+    -- range
+    | InclusiveRange
+    | ExclusiveRange
     deriving (Show, Eq)
 
   data ConstantName
@@ -65,6 +94,13 @@ module Ruby.AST where
     | Next   { expressions :: [Expression] }
     | Yield  { expressions :: [Expression] }
     | Raise { expression :: Expression }
+    | Self
+    | Assign { lhs :: [Name], rhs :: [Expression]}
+    | Integer { kind :: IntType, value :: Integer }
+    | RawString { strVal :: Text }
+    | Symbol    { strVal :: Text }
+    | Require { expression :: Expression }
+    -- NOT YET PARSED
     | Splat { expression :: Expression }
     | For { lhs :: [Name], expression :: Expression }
     | Until { condition :: Expression, expression :: Expression }
@@ -76,12 +112,7 @@ module Ruby.AST where
     | Case { condition :: Expression, clause :: CaseBranch }
     | Not { right :: Expression }
     | Dot { object :: Expression, method :: Name }
-    | Self
-    | Invoke
+    | Invoke { object :: Expression, arguments :: [Expression] }
     | BinaryOp { op :: BinaryOp, left :: Expression, right :: Expression }
-    | Assign { lhs :: [Name], rhs :: [Expression]}
-    | Integer { kind :: IntType, value :: Integer }
-    | RawString { strVal :: Text }
-    | Symbol    { strVal :: Text }
-    | Require { expression :: Expression }
+
     deriving (Show, Eq)

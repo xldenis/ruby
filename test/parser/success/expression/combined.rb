@@ -17,5 +17,15 @@ module Something
     def returning_method
       return 3, 5
     end
+
+    def five_string
+      5.to
+    end
+
+    def hello(and2: 1 + 1)
+      1 + 1
+      1 ~ 1
+      1 * 2 / 3 % 6 + 4 << 20
+    end
   end
 end

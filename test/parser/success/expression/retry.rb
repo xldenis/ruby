@@ -1,4 +1,4 @@
-[].each do
+1.each do
   retry
 end
 

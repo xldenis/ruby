@@ -48,4 +48,4 @@ module Ruby.Parser.Literal where
     where stringChar = (string "\\'" *> return "\\'") <|> (flip (:) [] <$> satisfy ('\'' /=))
 
   symbolString :: Parser Expression
-  symbolString = lexeme $ (Symbol . pack) <$> (char ':' *> methodIdentifier)
+  symbolString = lexeme $ (Symbol . pack) <$> (char ':' *> symbolIdentifier)

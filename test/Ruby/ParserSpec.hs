@@ -11,7 +11,7 @@ module Ruby.ParserSpec where
 
   spec :: Spec
   spec = parallel $do
-    filesShouldParse "test/parser/success/expression" parseExpressions
+    filesShouldParse "test/parser/success/expression" (parseProgram)
     filesShouldParse "test/parser/success/literal" (some $ parseLiteral <* newline)
     unitSpec
 

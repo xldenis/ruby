@@ -23,10 +23,14 @@ module Ruby.Parser.Lexer where
               return i
 
   methodIdentifier :: Parser String
-  methodIdentifier = label "method identifier" . lexeme $ (++) <$> ((:) <$> startLetter <*> many midLetter) <*> endLetter
-    where startLetter = oneOf "@$_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-          midLetter   = oneOf "_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-          endLetter   = maybeToList <$> optional (oneOf "!_=?") :: Parser String
+  methodIdentifier = label "method identifier" . lexeme $ (++) <$> ((:) <$> letterChar <*> many midLetter) <*> endLetter
+
+  symbolIdentifier :: Parser String
+  symbolIdentifier = label "symbol" . lexeme $ (++) <$> ((:) <$> startLetter <*> many midLetter) <*> endLetter
+
+  startLetter = oneOf "@$_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+  midLetter   = oneOf "_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+  endLetter   = maybeToList <$> optional (oneOf "!_=?") :: Parser String
 
   revSym :: Parser String
   revSym = p >>= res

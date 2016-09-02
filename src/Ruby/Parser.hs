@@ -1,12 +1,19 @@
 module Ruby.Parser where
   import Text.Megaparsec
   import Text.Megaparsec.Text
+  import Text.Megaparsec.Expr (makeExprParser)
 
   import Control.Monad (void)
 
   import Ruby.AST
   import Ruby.Parser.Lexer
-  import Ruby.Parser.Literal
+  import Ruby.Parser.Literal (parseLiteral)
+  import Ruby.Parser.Operator (opTable)
+
+  constantName :: Parser ConstantName
+  constantName = f <$> lexeme (capitalized `sepBy` symbol "::")
+    where f [n] = Name n
+          f (n:ns) = Namespace n (f ns)
 
   self :: Parser Expression
   self = symbol "self" *> return Self
@@ -42,13 +49,13 @@ module Ruby.Parser where
   defineMethod :: Parser Expression
   defineMethod = endBlock (symbol "def") $ do
     name <- methodIdentifier
-    args <- parens arguments <|> arguments
+    args <- parens arguments' <|> arguments'
     sep
     body <- parseExpressions
     return $ Method name args body
 
-  arguments :: Parser [Arg]
-  arguments = list argument
+  arguments' :: Parser [Arg]
+  arguments' = list argument
 
   argument :: Parser Arg
   argument = keywordArg <|> basicArg
@@ -82,7 +89,7 @@ module Ruby.Parser where
 
   block :: Parser Expression
   block = endBlock (symbol "do") $ do
-    lhs <- blockArgs
+    lhs <- concat <$> optional blockArgs
     sep
     body <- parseExpressions
 
@@ -90,7 +97,7 @@ module Ruby.Parser where
 
   inlineBlock :: Parser Expression
   inlineBlock = braces $ do
-    lhs <- blockArgs
+    lhs <- concat <$> optional blockArgs
     body <- parseExpressions
 
     return $ InlineBlock lhs body
@@ -103,6 +110,17 @@ module Ruby.Parser where
     symbol "require"
     path <- parseExpression
     return $ Require path
+
+  selector :: Expression -> Parser Expression
+  selector object = try $ do
+    symbol "."
+    method <- methodIdentifier
+    return $ Dot object method
+
+  invoke :: Expression -> Parser Expression
+  invoke object = try $ do
+    args <- list parseExpression
+    return $ Invoke object args
 
   assignment :: Parser Expression
   assignment = try $ do
@@ -151,32 +169,42 @@ module Ruby.Parser where
     body <- parseExpressions
     return $ Class name super body
 
+  parseProgram :: Parser Expression
+  parseProgram = scn *> parseExpressions
+
   parseExpressions :: Parser Expression
   parseExpressions =
     Seq <$> parseExpression `endBy` sep
 
   parseExpression :: Parser Expression
-  parseExpression = defined
-                 <|> defineMethod
-                 <|> parseModule
-                 <|> parseClass
-                 <|> begin
-                 <|> self
-                 <|> raise
-                 <|> parseReturn
-                 <|> yield
-                 <|> next
-                 <|> parseBreak
-                 <|> undefine
-                 <|> inlineBlock
-                 <|> block
-                 <|> alias
-                 <|> require
-                 <|> assignment
-                 <|> retry
-                 <|> parseLiteral
+  parseExpression = do
+    op <- makeExprParser parseTerm opTable
+    parseExpression' op
 
-  constantName :: Parser ConstantName
-  constantName = f <$> lexeme (capitalized `sepBy` symbol "::")
-    where f [n] = Name n
-          f (n:ns) = Namespace n (f ns)
+  parseExpression' :: Expression -> Parser Expression
+  parseExpression' op = do
+    ex <- optional (selector op)
+    case ex of
+      Nothing -> return op
+      Just x -> parseExpression' x
+
+  parseTerm :: Parser Expression
+  parseTerm = defined
+           <|> defineMethod
+           <|> parseModule
+           <|> parseClass
+           <|> begin
+           <|> self
+           <|> raise
+           <|> parseReturn
+           <|> yield
+           <|> next
+           <|> parseBreak
+           <|> undefine
+           <|> inlineBlock
+           <|> block
+           <|> alias
+           <|> require
+           <|> assignment
+           <|> retry
+           <|> parseLiteral
