@@ -15,3 +15,11 @@ elsif 5 < 7
 elsif 6 < 9
   1
 end
+
+unless self.to_string
+  5
+end
+
+unless self.go 5
+else
+end

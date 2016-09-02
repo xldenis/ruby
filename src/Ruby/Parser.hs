@@ -101,6 +101,13 @@ module Ruby.Parser where
 
     return . If $ left (foldr (\a b -> a b) cap branches)
 
+  parseUnless :: Parser Expression
+  parseUnless = endBlock (symbol "unless") $ do
+    left <- Guard <$> (parseExpression <* sep) <*> parseExpressions
+    cap <- option Nil $ Else <$> (symbol "else" *> sep *> parseExpressions)
+
+    return . Unless $ left cap
+
   block :: Parser Expression
   block = endBlock (symbol "do") $ do
     lhs <- concat <$> optional blockArgs
@@ -219,7 +226,8 @@ module Ruby.Parser where
            <|> block
            <|> alias
            <|> require
-           <|> assignment
            <|> retry
            <|> parseIf
+           <|> parseUnless
+           <|> assignment
            <|> parseLiteral
