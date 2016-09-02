@@ -71,6 +71,12 @@ module Ruby.AST where
     | Hexadecimal
     deriving (Show, Eq)
 
+  data VariableKind
+    = Local
+    | Instance
+    | ClassInstance
+    deriving (Show, Eq)
+
   data Rescue
     = ExceptionClasses { classes :: [Expression], expression :: Expression }
     | ExceptionBinding { classes :: [Expression], variable :: Name, expression :: Expression}
@@ -100,19 +106,21 @@ module Ruby.AST where
     | RawString { strVal :: Text }
     | Symbol    { strVal :: Text }
     | Require { expression :: Expression }
+    | IfMod { expression :: Expression, condition :: Expression }
+    | UnlessMod { expression :: Expression, condition :: Expression }
+    | If { branch :: CondBranch }
+    | Unless { branch :: CondBranch }
+    | Dot { object :: Expression, method :: Name }
+    | Invoke { object :: Expression, arguments :: [Expression] }
+    | BinaryOp { op :: BinaryOp, left :: Expression, right :: Expression }
+    | Constant { constant :: ConstantName }
+    | Variable { varKind :: VariableKind, variable :: Name }
     -- NOT YET PARSED
     | Splat { expression :: Expression }
     | For { lhs :: [Name], expression :: Expression }
     | Until { condition :: Expression, expression :: Expression }
     | While { condition :: Expression, expression :: Expression }
-    | IfMod { expression :: Expression, condition :: Expression }
-    | UnlessMod { expression :: Expression, condition :: Expression }
-    | If { branch :: CondBranch }
-    | Unless { branch :: CondBranch }
     | Case { condition :: Expression, clause :: CaseBranch }
     | Not { right :: Expression }
-    | Dot { object :: Expression, method :: Name }
-    | Invoke { object :: Expression, arguments :: [Expression] }
-    | BinaryOp { op :: BinaryOp, left :: Expression, right :: Expression }
 
     deriving (Show, Eq)

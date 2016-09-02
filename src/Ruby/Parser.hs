@@ -11,7 +11,7 @@ module Ruby.Parser where
   import Ruby.Parser.Operator (opTable)
 
   constantName :: Parser ConstantName
-  constantName = f <$> lexeme (capitalized `sepBy` symbol "::")
+  constantName = f <$> lexeme (capitalized `sepBy1` symbol "::")
     where f [n] = Name n
           f (n:ns) = Namespace n (f ns)
 
@@ -39,6 +39,9 @@ module Ruby.Parser where
   next :: Parser Expression
   next = Next <$> (symbol "next" *> list parseExpression)
 
+  parseConstant :: Parser Expression
+  parseConstant = Constant <$> constantName
+
   alias :: Parser Expression
   alias = do
     symbol "alias"
@@ -46,8 +49,8 @@ module Ruby.Parser where
     old <- identifier
     return $ Alias new old
 
-  defineMethod :: Parser Expression
-  defineMethod = endBlock (symbol "def") $ do
+  parseMethod :: Parser Expression
+  parseMethod = endBlock (symbol "def") $ do
     name <- methodIdentifier
     args <- parens arguments' <|> arguments'
     sep
@@ -202,6 +205,10 @@ module Ruby.Parser where
     body <- parseExpressions
     return $ Class name super body
 
+  localVariable :: Parser Expression
+  localVariable = try $ do
+    (Variable Local) <$> identifier
+
   parseProgram :: Parser Expression
   parseProgram = scn *> parseExpressions
 
@@ -223,7 +230,7 @@ module Ruby.Parser where
 
   parseTerm :: Parser Expression
   parseTerm = defined
-           <|> defineMethod
+           <|> parseMethod
            <|> parseModule
            <|> parseClass
            <|> begin
@@ -242,4 +249,6 @@ module Ruby.Parser where
            <|> parseIf
            <|> parseUnless
            <|> assignment
+           <|> parseConstant
+           <|> localVariable
            <|> parseLiteral
