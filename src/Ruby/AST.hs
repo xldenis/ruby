@@ -7,7 +7,7 @@ module Ruby.AST where
   data CondBranch
     = Guard { condition :: Expression, expression :: Expression, branch :: CondBranch  }
     | Else { expression :: Expression }
-    | Nil
+    | End
     deriving (Show, Eq)
 
   data CaseBranch
@@ -82,40 +82,48 @@ module Ruby.AST where
     | ExceptionBinding { classes :: [Expression], variable :: Name, expression :: Expression}
     deriving (Show, Eq)
 
+  data Literal
+    = Integer { kind :: IntType, integer :: Integer }
+    | Boolean { boolean :: Bool }
+    | String { strVal :: Text }
+    | Symbol { strVal :: Text }
+    | Nil
+    deriving (Show, Eq)
+
   data Expression
     = Begin { body :: Expression, rescue :: [Rescue], ensure :: Maybe Expression, elseBlock :: Maybe Expression }
-    | Module { name :: ConstantName, expression :: Expression }
-    | Class { name :: ConstantName, superClass :: Maybe ConstantName, expression :: Expression }
-    | Seq { expressions :: [Expression] }
     | Alias { target :: Name, source :: Name }
-    | Method { method :: Name, args :: [Arg], expression :: Expression }
-    | Undefine { methods :: [Name] }
-    | Defined { expression :: Expression }
-    | Block { lhs :: [Name], expression :: Expression }
-    | InlineBlock { lhs :: [Name], expression :: Expression }
-    | Redo
-    | Retry
-    | Break  { expressions :: [Expression] }
-    | Return { expressions :: [Expression] }
-    | Next   { expressions :: [Expression] }
-    | Yield  { expressions :: [Expression] }
-    | Raise { expression :: Expression }
-    | Self
     | Assign { lhs :: [Name], rhs :: [Expression]}
-    | Integer { kind :: IntType, value :: Integer }
-    | RawString { strVal :: Text }
-    | Symbol    { strVal :: Text }
-    | Require { expression :: Expression }
-    | IfMod { expression :: Expression, condition :: Expression }
-    | UnlessMod { expression :: Expression, condition :: Expression }
-    | If { branch :: CondBranch }
-    | Unless { branch :: CondBranch }
-    | Dot { object :: Expression, method :: Name }
-    | Invoke { object :: Expression, arguments :: [Expression] }
     | BinaryOp { op :: BinaryOp, left :: Expression, right :: Expression }
+    | Block { lhs :: [Name], expression :: Expression }
+    | Break  { expressions :: [Expression] }
+    | Class { name :: ConstantName, superClass :: Maybe Expression, expression :: Expression }
     | Constant { constant :: ConstantName }
+    | Defined { expression :: Expression }
+    | Dot { object :: Expression, method :: Name }
+    | If { branch :: CondBranch }
+    | IfMod { expression :: Expression, condition :: Expression }
+    | InlineBlock { lhs :: [Name], expression :: Expression }
+    | Invoke { object :: Expression, arguments :: [Expression] }
+    | Literal { value :: Literal }
+    | Method { method :: Name, args :: [Arg], expression :: Expression, classMethod :: Bool }
+    | Module { name :: ConstantName, expression :: Expression }
+    | Next { expressions :: [Expression] }
+    | Raise { expression :: Expression }
+    | Redo
+    | Require { expression :: Expression }
+    | Retry
+    | Return { expressions :: [Expression] }
+    | Self
+    | Seq { expressions :: [Expression] }
+    | Super
+    | Undefine { methods :: [Name] }
+    | Unless { branch :: CondBranch }
+    | UnlessMod { expression :: Expression, condition :: Expression }
     | Variable { varKind :: VariableKind, variable :: Name }
+    | Yield  { expressions :: [Expression] }
     -- NOT YET PARSED
+    | EigenClass
     | Splat { expression :: Expression }
     | For { lhs :: [Name], expression :: Expression }
     | Until { condition :: Expression, expression :: Expression }

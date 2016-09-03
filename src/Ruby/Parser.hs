@@ -5,6 +5,8 @@ module Ruby.Parser where
 
   import Control.Monad (void)
 
+  import Data.Maybe (isJust)
+
   import Ruby.AST
   import Ruby.Parser.Lexer
   import Ruby.Parser.Literal (parseLiteral)
@@ -26,6 +28,9 @@ module Ruby.Parser where
 
   redo :: Parser Expression
   redo = symbol "redo"  *> return Redo
+
+  super :: Parser Expression
+  super = symbol "super" *> return Super
 
   parseReturn :: Parser Expression
   parseReturn = Return <$> (symbol "return" *> list parseExpression)
@@ -51,11 +56,12 @@ module Ruby.Parser where
 
   parseMethod :: Parser Expression
   parseMethod = endBlock (symbol "def") $ do
+    isSelf <- isJust <$> (optional $ symbol "self" *> symbol ".")
     name <- methodIdentifier
     args <- parens arguments' <|> arguments'
     sep
     body <- parseExpressions
-    return $ Method name args body
+    return $ Method name args body isSelf
 
   arguments' :: Parser [Arg]
   arguments' = list argument
@@ -100,14 +106,14 @@ module Ruby.Parser where
       right <- parseExpressions
       return $ Guard cond right
 
-    cap <- option Nil $ Else <$> (symbol "else" *> sep *> parseExpressions)
+    cap <- option End $ Else <$> (symbol "else" *> sep *> parseExpressions)
 
     return . If $ left (foldr (\a b -> a b) cap branches)
 
   parseUnless :: Parser Expression
   parseUnless = endBlock (symbol "unless") $ do
     left <- Guard <$> (parseExpression <* sep) <*> parseExpressions
-    cap <- option Nil $ Else <$> (symbol "else" *> sep *> parseExpressions)
+    cap <- option End $ Else <$> (symbol "else" *> sep *> parseExpressions)
 
     return . Unless $ left cap
 
@@ -143,9 +149,9 @@ module Ruby.Parser where
 
   invoke :: Expression -> Parser Expression
   invoke object = try $ do
-    args <- list1 parseExpression
+    args <- parens argList <|> argList
     return $ Invoke object args
-
+    where argList = list1 (scn *> parseExpression)
   ifGuard :: Expression -> Parser Expression
   ifGuard object = do
     symbol "if"
@@ -200,7 +206,7 @@ module Ruby.Parser where
   parseClass :: Parser Expression
   parseClass = endBlock (symbol "class") $ do
     name <- constantName
-    super <- optional $ symbol "<" *> constantName
+    super <- optional $ symbol "<" *> parseExpression
     scn
     body <- parseExpressions
     return $ Class name super body
@@ -219,17 +225,22 @@ module Ruby.Parser where
   parseExpression :: Parser Expression
   parseExpression = do
     op <- makeExprParser parseTerm opTable
-    parseExpression' op
+    return op
 
-  parseExpression' :: Expression -> Parser Expression
-  parseExpression' op = do
+  parseTerm :: Parser Expression
+  parseTerm = do
+    term <- baseTerm
+    leftTerm term
+
+  leftTerm :: Expression -> Parser Expression
+  leftTerm op = do
     ex <- optional (selector op <|> ifGuard op <|> unlessGuard op <|> invoke op)
     case ex of
       Nothing -> return op
-      Just x -> parseExpression' x
+      Just x -> leftTerm x
 
-  parseTerm :: Parser Expression
-  parseTerm = defined
+  baseTerm :: Parser Expression
+  baseTerm = defined
            <|> parseMethod
            <|> parseModule
            <|> parseClass
@@ -251,4 +262,6 @@ module Ruby.Parser where
            <|> assignment
            <|> parseConstant
            <|> localVariable
+           <|> parens parseExpression
+           <|> super
            <|> parseLiteral

@@ -16,7 +16,7 @@ module Ruby.Parser.Lexer where
 
   identifier :: Parser String
   identifier = p >>= res
-    where p = label "identifier" . lexeme $ ((:) <$> letterChar <*> many alphaNumChar)
+    where p = label "identifier" . lexeme $ ((:) <$> startLetter <*> many midLetter)
           res i = if i `elem` reserved then
               fail $ "The reserved word `" ++ i ++ "` cannot be used as an identifier."
             else

@@ -19,13 +19,13 @@ module Ruby.Parser.LiteralSpec where
   unitSpec = do
     describe "parseLiteral" $ do
       it "prefers octal over decimal" $ do
-        parse (parseLiteral <* eof) "" "0377" `shouldBe` (Right $ Integer Octal 255)
+        parse (intLit <* eof) "" "0377" `shouldBe` (Right $ Integer Octal 255)
       it "parses decimal when not valid octal" $ do
-        parse (parseLiteral <* eof) "" "0387" `shouldBe` (Right $ Integer Decimal 387)
+        parse (intLit <* eof) "" "0387" `shouldBe` (Right $ Integer Decimal 387)
       it "parses hex" $ do
-        parse (parseLiteral <* eof) "" "0xFF" `shouldBe` (Right $ Integer Hexadecimal 255)
+        parse (intLit <* eof) "" "0xFF" `shouldBe` (Right $ Integer Hexadecimal 255)
       it "parses octal" $ do
-        parse (parseLiteral <* eof) "" "0o55" `shouldBe` (Right $ Integer Octal 45)
+        parse (intLit <* eof) "" "0o55" `shouldBe` (Right $ Integer Octal 45)
     describe "singleString" $ do
       it "parses" $ do
-        parse (singleString <* eof) "" "'test'" `shouldBe` (Right $ RawString "test")
+        parse (singleString <* eof) "" "'test'" `shouldBe` (Right $ String "test")
