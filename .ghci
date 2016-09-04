@@ -1,0 +1,2 @@
+:m + Text.Megaparsec
+:seti -XOverloadedStrings

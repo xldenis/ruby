@@ -1,3 +1,7 @@
+def aaa ; end
+def name ; 1 end
+def m ; 1; 1 ; 2 end
+
 def module(a) ; end
 
 def class ; end

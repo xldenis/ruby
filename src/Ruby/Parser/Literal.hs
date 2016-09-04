@@ -12,11 +12,14 @@ module Ruby.Parser.Literal where
   parseLiteral :: Parser Expression
   parseLiteral = Literal <$> (choice [singleString, symbolString, intLit, parseBoolean, nil])
 
+  variableLiteral :: Parser Expression
+  variableLiteral = Literal <$> (choice [nil, parseBoolean])
+
   nil :: Parser Literal
   nil = symbol "nil" *> return Nil
 
   parseBoolean :: Parser Literal
-  parseBoolean = symbol "false" *> (return $ Boolean False)
+  parseBoolean = symbol "false" *> (return $ Boolean False) <|> symbol "true" *> (return $ Boolean True)
 
   intLit :: Parser Literal
   intLit = lexeme $ hexadecimal <|> binary <|> octal <|> decimalAndOctal

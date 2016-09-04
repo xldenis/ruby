@@ -53,18 +53,20 @@ module Ruby.Parser.Lexer where
   endBlock open body = do
     open
     body <- body
-    sep
     symbol "end"
     return body
 
   scn :: Parser ()
-  scn = L.space (void spaceChar) lineComment empty
+  scn = L.space (void spaceChar <|> sepChar) lineComment empty
 
   sc :: Parser ()
   sc = L.space (void $ oneOf " \t") lineComment empty
 
   sep :: Parser ()
-  sep = L.space (void spaceChar <|> void (symbol ";")) lineComment empty
+  sep =  sepChar *> scn
+
+  sepChar :: Parser ()
+  sepChar = void $ oneOf "\n;"
 
   lineComment :: Parser ()
   lineComment = char '#' *> skipMany (noneOf "\n")
@@ -73,7 +75,7 @@ module Ruby.Parser.Lexer where
   list a = a `sepBy` symbol ","
 
   list1 :: Parser a -> Parser [a]
-  list1 a = a `sepBy1` symbol ","
+  list1 a = a `sepBy1` (symbol "," <* scn)
 
   parens :: Parser a -> Parser a
   parens = between (symbol "(") (symbol ")")

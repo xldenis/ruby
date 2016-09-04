@@ -24,7 +24,8 @@ module Something
 
     def hello(and2: 1 + 1)
       1 + 1
-      1 ~ 1
+      1
+      ~ 1
       1 * 2 / 3 % 6 + 4 << 20
     end
 

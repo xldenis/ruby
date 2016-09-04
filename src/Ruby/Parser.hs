@@ -3,13 +3,13 @@ module Ruby.Parser where
   import Text.Megaparsec.Text
   import Text.Megaparsec.Expr (makeExprParser)
 
-  import Control.Monad (void)
+  import Control.Monad (void, when)
 
   import Data.Maybe (isJust)
 
   import Ruby.AST
   import Ruby.Parser.Lexer
-  import Ruby.Parser.Literal (parseLiteral)
+  import Ruby.Parser.Literal (parseLiteral, variableLiteral)
   import Ruby.Parser.Operator (opTable)
 
   constantName :: Parser ConstantName
@@ -56,18 +56,18 @@ module Ruby.Parser where
 
   parseMethod :: Parser Expression
   parseMethod = endBlock (symbol "def") $ do
-    isSelf <- isJust <$> (optional $ symbol "self" *> symbol ".")
+    singleton <- (optional . try $ (choice [localVariable, keywordVariable, parens parseExpression])  <* symbol ".")
     name <- methodIdentifier
-    args <- parens arguments' <|> arguments'
-    sep
+    args <- parens arguments' <|> (arguments' <* sep)
+    scn
     body <- parseExpressions
-    return $ Method name args body isSelf
+    return $ Method name args body singleton
 
   arguments' :: Parser [Arg]
   arguments' = list argument
 
   argument :: Parser Arg
-  argument = keywordArg <|> basicArg
+  argument = try $ keywordArg <|> basicArg
 
   basicArg :: Parser Arg
   basicArg = do
@@ -120,7 +120,7 @@ module Ruby.Parser where
   block :: Parser Expression
   block = endBlock (symbol "do") $ do
     lhs <- concat <$> optional blockArgs
-    sep
+    scn
     body <- parseExpressions
 
     return $ Block lhs body
@@ -149,9 +149,15 @@ module Ruby.Parser where
 
   invoke :: Expression -> Parser Expression
   invoke object = try $ do
-    args <- parens argList <|> argList
+    when (isLiteral object) (fail "uncallable object")
+    args <- parens (scn *> argList) <|> argList
     return $ Invoke object args
-    where argList = list1 (scn *> parseExpression)
+    where argList = list1 (parseExpression)
+
+  isLiteral :: Expression -> Bool
+  isLiteral (Literal _) = True
+  isLiteral _ = False
+
   ifGuard :: Expression -> Parser Expression
   ifGuard object = do
     symbol "if"
@@ -166,22 +172,20 @@ module Ruby.Parser where
 
   assignment :: Parser Expression
   assignment = try $ do
-    lhs <- list variables
+    lhs <- list1 $ parseLeftHandTerm
     symbol "="
-    rhs <- list parseExpression
+    rhs <- list1 parseExpression
 
     return $ Assign lhs rhs
-    where variables = identifier
 
   begin :: Parser Expression
   begin = endBlock (symbol "begin") $ do
-    sep
+    scn
     body <- parseExpressions
-    rescues <- many parseRescue
-    sep
+    scn
+    rescues <- many (parseRescue <* scn)
     elseBlock <- optional $ (symbol "else" >> sep) *> parseExpressions
-    sep
-    ensure <- optional $ (symbol "ensure" >> sep) *>
+    ensure <- optional $ (symbol "ensure" >> scn) *>
       parseExpressions
     return $ Begin body rescues ensure elseBlock
 
@@ -207,7 +211,7 @@ module Ruby.Parser where
   parseClass = endBlock (symbol "class") $ do
     name <- constantName
     super <- optional $ symbol "<" *> parseExpression
-    scn
+    sep
     body <- parseExpressions
     return $ Class name super body
 
@@ -215,37 +219,49 @@ module Ruby.Parser where
   localVariable = try $ do
     (Variable Local) <$> identifier
 
+  userVariable :: Parser Expression
+  userVariable = localVariable <|> parseConstant
+
+  keywordVariable :: Parser Expression
+  keywordVariable = variableLiteral <|> self
+
   parseProgram :: Parser Expression
   parseProgram = scn *> parseExpressions
 
   parseExpressions :: Parser Expression
-  parseExpressions =
-    Seq <$> parseExpression `endBy` sep
+  parseExpressions = Seq <$> parseExpression `sepEndBy` sep
 
   parseExpression :: Parser Expression
-  parseExpression = do
-    op <- makeExprParser parseTerm opTable
+  parseExpression = label "expression" $ do
+    op <- assignment <|> makeExprParser parseTerm opTable
     return op
 
   parseTerm :: Parser Expression
-  parseTerm = do
-    term <- baseTerm
-    leftTerm term
+  parseTerm = baseTerm >>= (leftTerm choices)
+    where choices op = selector op <|> ifGuard op <|> unlessGuard op <|> invoke op
 
-  leftTerm :: Expression -> Parser Expression
-  leftTerm op = do
-    ex <- optional (selector op <|> ifGuard op <|> unlessGuard op <|> invoke op)
+  parseLeftHandTerm :: Parser Expression
+  parseLeftHandTerm = baseTerm >>= (leftTerm choices)
+    where choices op = selector op <|> ifGuard op <|> unlessGuard op
+
+  leftTerm :: (Expression -> Parser Expression) -> Expression -> Parser Expression
+  leftTerm list op = do
+    ex <- optional (list op)
     case ex of
       Nothing -> return op
-      Just x -> leftTerm x
+      Just x -> leftTerm list x
 
   baseTerm :: Parser Expression
-  baseTerm = defined
+  baseTerm =  primaryValue
+
+  primaryValue :: Parser Expression
+  primaryValue = defined
            <|> parseMethod
            <|> parseModule
            <|> parseClass
            <|> begin
            <|> self
+           <|> super
            <|> raise
            <|> parseReturn
            <|> yield
@@ -259,9 +275,7 @@ module Ruby.Parser where
            <|> retry
            <|> parseIf
            <|> parseUnless
-           <|> assignment
            <|> parseConstant
            <|> localVariable
            <|> parens parseExpression
-           <|> super
            <|> parseLiteral

@@ -1,3 +1,4 @@
+
 module Ruby.Parser.Operator where
   import Text.Megaparsec
   import Text.Megaparsec.Text
@@ -5,12 +6,15 @@ module Ruby.Parser.Operator where
 
   import Ruby.Parser.Lexer (symbol)
 
-  import Ruby.AST (BinaryOp(..), Expression(BinaryOp))
+  import Ruby.AST (BinaryOp(..), UnaryOp(..), Expression(BinaryOp, UnaryOp))
 
   opTable :: [[Operator Parser Expression]]
-  opTable = [ [ binary "**" Exponent ]
-            , [ binary "~"  BitFlip
-
+  opTable = [ [ prefix "::" GlobalScope ]
+            , [ binary "**" Exponent ]
+            , [ prefix "~"  BitFlip
+              , prefix "+"  Positive
+              , prefix "-" Negative
+              , prefix "!" Not
               ]
             , [ binary "*" Multiplication
               , binary "/" Division
@@ -22,17 +26,17 @@ module Ruby.Parser.Operator where
             , [ binary ">>" RightShift
               , binary "<<" LeftShift
               ]
-            , [ binary "&" BitAnd ]
+            , [ singOp "&" BitAnd ]
             , [ binary "^" BitXor
-              , binary "|" BitOr
+              , singOp "|" BitOr
               ]
-            , [ binary "<=" LessEqual
-              , binary "<"  LessThan
-              , binary ">"  GreaterThan
+            , [ unTrailedOp "<=" ">" LessEqual
               , binary ">=" GreaterEqual
+              , unTrailedOp "<" "=" LessThan
+              , unTrailedOp ">" "=" GreaterThan
               ]
             , [ binary "<=>" Compare
-              , binary "=="  Equal
+              , unTrailedOp "==" "=" Equal
               , binary "===" ThreeEqual
               , binary "!="  NotEqual
               , binary "=~"  Match
@@ -40,13 +44,28 @@ module Ruby.Parser.Operator where
               ]
             , [ binary "&&" And ]
             , [ binary "||" Or ]
-            , [ binary ".." InclusiveRange
+            , [ unTrailedOp ".." "." InclusiveRange
               , binary "..." ExclusiveRange
               ]
+            , [ prefix "not" NotWord ]
             , [ binary "or" AndWord
               , binary "and" AndWord
               ]
             ]
+
+  unTrailedOp :: String -> String -> BinaryOp -> Operator Parser Expression
+  unTrailedOp op trail cons = InfixL . try $ do
+    op <- symbol op
+    notFollowedBy (symbol trail)
+    return $ \a b -> BinaryOp cons a b
+
+  singOp :: String -> BinaryOp -> Operator Parser Expression
+  singOp op cons = unTrailedOp op op cons
+
+  prefix :: String -> UnaryOp -> Operator Parser Expression
+  prefix op cons = Prefix $ do
+    op <- symbol op *> return cons
+    return $ \a -> UnaryOp op a
 
   binary :: String -> BinaryOp -> Operator Parser Expression
   binary op cons = InfixL $ do

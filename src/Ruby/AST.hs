@@ -46,7 +46,6 @@ module Ruby.AST where
     | BitAnd
     | BitOr
     | BitXor
-    | BitFlip
     | LeftShift
     | RightShift
     -- logical operators
@@ -57,6 +56,15 @@ module Ruby.AST where
     -- range
     | InclusiveRange
     | ExclusiveRange
+    deriving (Show, Eq)
+
+  data UnaryOp
+    = Positive
+    | Negative
+    | BitFlip
+    | GlobalScope
+    | Not
+    | NotWord
     deriving (Show, Eq)
 
   data ConstantName
@@ -93,7 +101,7 @@ module Ruby.AST where
   data Expression
     = Begin { body :: Expression, rescue :: [Rescue], ensure :: Maybe Expression, elseBlock :: Maybe Expression }
     | Alias { target :: Name, source :: Name }
-    | Assign { lhs :: [Name], rhs :: [Expression]}
+    | Assign { assignees :: [Expression], values :: [Expression]}
     | BinaryOp { op :: BinaryOp, left :: Expression, right :: Expression }
     | Block { lhs :: [Name], expression :: Expression }
     | Break  { expressions :: [Expression] }
@@ -106,7 +114,7 @@ module Ruby.AST where
     | InlineBlock { lhs :: [Name], expression :: Expression }
     | Invoke { object :: Expression, arguments :: [Expression] }
     | Literal { value :: Literal }
-    | Method { method :: Name, args :: [Arg], expression :: Expression, classMethod :: Bool }
+    | Method { method :: Name, args :: [Arg], expression :: Expression, prefix :: Maybe Expression }
     | Module { name :: ConstantName, expression :: Expression }
     | Next { expressions :: [Expression] }
     | Raise { expression :: Expression }
@@ -117,18 +125,21 @@ module Ruby.AST where
     | Self
     | Seq { expressions :: [Expression] }
     | Super
+    | UnaryOp { unaryOp :: UnaryOp, expression :: Expression }
     | Undefine { methods :: [Name] }
     | Unless { branch :: CondBranch }
     | UnlessMod { expression :: Expression, condition :: Expression }
     | Variable { varKind :: VariableKind, variable :: Name }
     | Yield  { expressions :: [Expression] }
     -- NOT YET PARSED
+    | Encoding
+    | Line
+    | File
     | EigenClass
     | Splat { expression :: Expression }
     | For { lhs :: [Name], expression :: Expression }
     | Until { condition :: Expression, expression :: Expression }
     | While { condition :: Expression, expression :: Expression }
     | Case { condition :: Expression, clause :: CaseBranch }
-    | Not { right :: Expression }
 
     deriving (Show, Eq)
