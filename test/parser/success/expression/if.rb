@@ -23,3 +23,10 @@ end
 unless self.go 5
 else
 end
+
+something unless true
+
+1 if false == true
+
+unless true ; 2 ; else 3 end
+# return unless File.file?(path)

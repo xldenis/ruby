@@ -33,12 +33,7 @@ module Ruby.Parser.Lexer where
   endLetter   = maybeToList <$> optional (oneOf "!_=?") :: Parser String
 
   revSym :: Parser String
-  revSym = p >>= res
-    where p = label "symbol" . lexeme $ ((:) <$> letterChar <*> many alphaNumChar <* char ':')
-          res i = if i `elem` reserved then
-              fail $ "The reserved word `" ++ i ++ "` cannot be used as an identifier."
-            else
-              return i
+  revSym = label "keyword" . lexeme $ ((:) <$> letterChar <*> many midLetter <* char ':')
 
   lexeme :: Parser a -> Parser a
   lexeme = L.lexeme sc

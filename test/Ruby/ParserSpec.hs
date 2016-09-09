@@ -28,4 +28,5 @@ module Ruby.ParserSpec where
         parse (assignment <* eof) "" "self = 1, 1" `shouldBe` (Right $ Assign [Self] [Literal $ Integer Decimal 1, Literal $ Integer Decimal 1])
     describe "invoke parses" $ do
       it "single arguments" $ do
-        parse (invoke (Super) <* eof) "" "2" `shouldBe` (Right $ (Super) `Invoke` [Literal $ Integer Decimal 2])
+        parse (invoke (Super) <* eof) "" "2" `shouldBe` (Right $ (Super) `Invoke` [Normal . Literal $ Integer Decimal 2])
+

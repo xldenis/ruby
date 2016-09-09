@@ -15,6 +15,7 @@ module Ruby.Parser.Operator where
               , prefix "+"  Positive
               , prefix "-" Negative
               , prefix "!" Not
+              , unTrailedPrefix "&" "&" BlockYield
               ]
             , [ binary "*" Multiplication
               , binary "/" Division
@@ -66,6 +67,12 @@ module Ruby.Parser.Operator where
   prefix op cons = Prefix $ do
     op <- symbol op *> return cons
     return $ \a -> UnaryOp op a
+
+  unTrailedPrefix :: String -> String -> UnaryOp -> Operator Parser Expression
+  unTrailedPrefix op trail cons = Prefix . try $ do
+    op <- symbol op
+    notFollowedBy (symbol trail)
+    return $ \a -> UnaryOp cons a
 
   binary :: String -> BinaryOp -> Operator Parser Expression
   binary op cons = InfixL $ do

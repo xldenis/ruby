@@ -20,6 +20,12 @@ module Ruby.AST where
     | Keyword { name :: Name, defaultVal :: Maybe Expression }
     | ArraySplat { name :: Name }
     | HashSplat { name :: Name }
+    | BlockArg { name :: Name }
+    deriving (Show, Eq)
+
+  data CallArg
+    = Normal { expression :: Expression }
+    | Named  { name :: Name, expression :: Expression }
     deriving (Show, Eq)
 
   data BinaryOp
@@ -65,6 +71,7 @@ module Ruby.AST where
     | GlobalScope
     | Not
     | NotWord
+    | BlockYield
     deriving (Show, Eq)
 
   data ConstantName
@@ -112,7 +119,7 @@ module Ruby.AST where
     | If { branch :: CondBranch }
     | IfMod { expression :: Expression, condition :: Expression }
     | InlineBlock { lhs :: [Name], expression :: Expression }
-    | Invoke { object :: Expression, arguments :: [Expression] }
+    | Invoke { object :: Expression, arguments :: [CallArg] }
     | Literal { value :: Literal }
     | Method { method :: Name, args :: [Arg], expression :: Expression, prefix :: Maybe Expression }
     | Module { name :: ConstantName, expression :: Expression }
@@ -135,7 +142,7 @@ module Ruby.AST where
     | Encoding
     | Line
     | File
-    | EigenClass
+    | EigenClass { expression :: Expression }
     | Splat { expression :: Expression }
     | For { lhs :: [Name], expression :: Expression }
     | Until { condition :: Expression, expression :: Expression }
