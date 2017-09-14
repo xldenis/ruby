@@ -13,10 +13,11 @@ import Test.Hspec
 import Test.Hspec.Megaparsec
 import Text.Megaparsec
 
+import Data.Void
 
 parseFromFile p file = runParser p file <$> readFile file
 
-filesShouldParse :: Show b => FilePath -> Parsec Dec Text b -> Spec
+filesShouldParse :: Show b => FilePath -> Parsec Void Text b -> Spec
 filesShouldParse dir p = do
   fs <- runIO $ getDirectoryPaths dir >>= filterM (doesFileExist)
 
@@ -25,7 +26,7 @@ filesShouldParse dir p = do
       it ((takeFileName f) ++ " parses correctly.") $ do
         (parseFromFile (p <* eof) f) >>= shouldSucceed) fs
 
-filesShouldFail :: Show b => FilePath -> Parsec Dec Text b -> Spec
+filesShouldFail :: Show b => FilePath -> Parsec Void Text b -> Spec
 filesShouldFail dir p = do
   fs <- runIO $ getDirectoryPaths dir >>= filterM (doesFileExist)
 

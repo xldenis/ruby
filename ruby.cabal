@@ -23,7 +23,7 @@ library
   build-depends:       base >= 4.7 && < 5
                      , megaparsec >= 5
                      , text
-  default-extensions:  LambdaCase, DuplicateRecordFields
+  default-extensions:  LambdaCase, DuplicateRecordFields, OverloadedStrings
 
 executable ruby-app
   hs-source-dirs:      app

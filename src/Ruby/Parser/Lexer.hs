@@ -1,88 +1,112 @@
-module Ruby.Parser.Lexer where
-  import qualified Text.Megaparsec.Lexer as L
-  import Text.Megaparsec.Text
-  import Text.Megaparsec
+module Ruby.Parser.Lexer (
+    module Ruby.Parser.Lexer
+  , char
+  , oneOf
+  , Text
+  , pack
+  , unpack
+) where
 
-  import Data.Maybe (maybeToList)
+import           Text.Megaparsec
+import           Text.Megaparsec.Char
+import qualified Text.Megaparsec.Char.Lexer as L
 
-  import Control.Monad (void)
-  import Control.Applicative ((<*), empty)
+import           Data.Maybe                 (maybeToList)
 
-  reserved :: [String]
-  reserved = ["__ENCODING__", "__LINE__", "__FILE__", "BEGIN", "END", "alias", "and", "begin", "break", "case",
-              "class", "def", "defined?", "do", "else", "elsif", "end", "ensure", "false", "for", "if", "in",
-              "module", "next", "nil", "not", "or", "redo", "rescue", "retry", "return", "self", "super", "then",
-              "true", "undef", "unless", "until", "when", "while", "yield"]
+import           Control.Applicative        (empty, liftA2, (<*))
+import           Control.Monad              (void)
 
-  identifier :: Parser String
-  identifier = p >>= res
-    where p = label "identifier" . lexeme $ ((:) <$> startLetter <*> many midLetter)
-          res i = if i `elem` reserved then
-              fail $ "The reserved word `" ++ i ++ "` cannot be used as an identifier."
-            else
-              return i
+import           Data.Text                  (Text, cons, pack, singleton,
+                                             unpack)
+import           Data.Void
 
-  methodIdentifier :: Parser String
-  methodIdentifier = label "method identifier" . lexeme $ (++) <$> ((:) <$> letterChar <*> many midLetter) <*> endLetter
+import           Data.Maybe
+import           Data.Semigroup
 
-  symbolIdentifier :: Parser String
-  symbolIdentifier = label "symbol" . lexeme $ (++) <$> ((:) <$> startLetter <*> many midLetter) <*> endLetter
+type Parser = Parsec Void Text
 
-  startLetter = oneOf "@$_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-  midLetter   = oneOf "_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-  endLetter   = maybeToList <$> optional (oneOf "!_=?") :: Parser String
+reserved :: [Text]
+reserved = ["__ENCODING__", "__LINE__", "__FILE__", "BEGIN", "END", "alias", "and", "begin", "break", "case",
+            "class", "def", "defined?", "do", "else", "elsif", "end", "ensure", "false", "for", "if", "in",
+            "module", "next", "nil", "not", "or", "redo", "rescue", "retry", "return", "self", "super", "then",
+            "true", "undef", "unless", "until", "when", "while", "yield"]
 
-  revSym :: Parser String
-  revSym = label "keyword" . lexeme $ ((:) <$> letterChar <*> many midLetter <* char ':')
+identifier :: Parser Text
+identifier = p >>= res
+  where p = label "identifier" . lexeme $ pack <$> ((:) <$> startLetter <*> (many midLetter))
+        res i = if i `elem` reserved then
+            fail $ "The reserved word `" <> unpack i <> "` cannot be used as an identifier."
+          else
+            return i
 
-  lexeme :: Parser a -> Parser a
-  lexeme = L.lexeme sc
+methodIdentifier :: Parser Text
+methodIdentifier = label "method identifier" . lexeme $ (<>) . pack <$> ((:) <$> letterChar <*> many midLetter) <*> endLetter
 
-  capitalized :: Parser String
-  capitalized = (:) <$> upperChar <*> many alphaNumChar
+symbolIdentifier :: Parser Text
+symbolIdentifier = label "symbol" . lexeme $ (<>) . pack <$> ((:) <$> startLetter <*> many midLetter) <*> endLetter
 
-  symbol :: String -> Parser String
-  symbol = L.symbol sc
+startLetter :: Parser Char
+startLetter = oneOf chars
+  where chars = "@$_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" :: String
 
-  endBlock :: Parser a -> Parser b -> Parser b
-  endBlock open body = do
-    open
-    body <- body
-    symbol "end"
-    return body
+midLetter :: Parser Char
+midLetter   = oneOf chars
+  where chars =  "_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789" :: String
 
-  scn :: Parser ()
-  scn = L.space (void spaceChar <|> sepChar) lineComment empty
+endLetter :: Parser Text
+endLetter = maybe mempty singleton <$> optional (oneOf ("!_=?" :: [Char]))
 
-  sc :: Parser ()
-  sc = L.space (void $ oneOf " \t") lineComment empty
+revSym :: Parser Text
+revSym = label "keyword" . lexeme $ pack <$> ((:) <$> letterChar <*> many midLetter <* char ':')
 
-  sep :: Parser ()
-  sep =  sepChar *> scn
+lexeme :: Parser a -> Parser a
+lexeme = L.lexeme sc
 
-  sepChar :: Parser ()
-  sepChar = void $ oneOf "\n;"
+capitalized :: Parser Text
+capitalized = pack <$> ((:) <$> upperChar <*> many alphaNumChar)
 
-  lineComment :: Parser ()
-  lineComment = char '#' *> skipMany (noneOf "\n")
+symbol :: Tokens Text -> Parser Text
+symbol = L.symbol sc
 
-  list :: Parser a -> Parser [a]
-  list a = a `sepBy` symbol ","
+endBlock :: Parser a -> Parser b -> Parser b
+endBlock open body = do
+  open
+  body <- body
+  symbol "end"
+  return body
 
-  list1 :: Parser a -> Parser [a]
-  list1 a = a `sepBy1` (symbol "," <* scn)
+scn :: Parser ()
+scn = L.space (void spaceChar <|> sepChar) lineComment empty
 
-  parens :: Parser a -> Parser a
-  parens = between (symbol "(") (symbol ")")
+sc :: Parser ()
+sc = L.space (void $ oneOf (" \t" :: String)) lineComment empty
 
-  squotes :: Parser a -> Parser a
-  squotes = between (char '\'') (char '\'')
+sep :: Parser ()
+sep =  sepChar *> scn
 
-  dquotes :: Parser a -> Parser a
-  dquotes = between (char '"') (char '"')
+sepChar :: Parser ()
+sepChar = void $ oneOf ("\n;" :: String)
 
-  pipes :: Parser a -> Parser a
-  pipes = between (symbol "|") (symbol "|")
+lineComment :: Parser ()
+lineComment = char '#' *> skipMany (noneOf ("\n" :: [Char]))
 
-  braces :: Parser a -> Parser a
-  braces = between (symbol "{") (symbol "}")
+list :: Parser a -> Parser [a]
+list a = a `sepBy` symbol ","
+
+list1 :: Parser a -> Parser [a]
+list1 a = a `sepBy1` (symbol "," <* scn)
+
+parens :: Parser a -> Parser a
+parens = between (symbol "(") (symbol ")")
+
+squotes :: Parser a -> Parser a
+squotes = between (char '\'') (char '\'')
+
+dquotes :: Parser a -> Parser a
+dquotes = between (char '"') (char '"')
+
+pipes :: Parser a -> Parser a
+pipes = between (symbol "|") (symbol "|")
+
+braces :: Parser a -> Parser a
+braces = between (symbol "{") (symbol "}")
